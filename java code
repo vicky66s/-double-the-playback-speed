@@ -1,0 +1,44 @@
+import javax.sound.sampled.*;
+
+public class AudioSpeedUp {
+
+    public static void main(String[] args) {
+        String filename = "your_audio_file.wav"; // Replace 'your_audio_file.wav' with the path to your audio file
+        try {
+            // Open the audio file
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(AudioSpeedUp.class.getResource(filename));
+            AudioFormat format = audioInputStream.getFormat();
+
+            // Adjust the playback speed to double
+            float speed = 2.0f;
+            AudioFormat newFormat = new AudioFormat(format.getEncoding(), format.getSampleRate() * speed,
+                    format.getSampleSizeInBits(), format.getChannels(), format.getFrameSize(),
+                    format.getFrameRate() * speed, format.isBigEndian());
+
+            // Apply the new format to the audio stream
+            AudioInputStream newAudioInputStream = AudioSystem.getAudioInputStream(newFormat, audioInputStream);
+
+            // Play the audio
+            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+            SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
+            line.open(newFormat);
+            line.start();
+
+            byte[] buffer = new byte[4096];
+            int bytesRead = 0;
+            while ((bytesRead = newAudioInputStream.read(buffer)) != -1) {
+                line.write(buffer, 0, bytesRead);
+            }
+
+            // Close the resources
+            line.drain();
+            line.stop();
+            line.close();
+            newAudioInputStream.close();
+            audioInputStream.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
